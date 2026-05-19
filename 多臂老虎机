@@ -19,9 +19,9 @@ class BernoulliBandit: # bernoulli bandit多臂老虎机
             return 0
 
 
-np.random.seed(1)  # 设定随机种子,使实验具有可重复性
-K = 10
-bandit_10_arm = BernoulliBandit(K)
-print("随机生成了一个%d臂伯努利老虎机" % K)
-print("获奖概率最大的拉杆为%d号,其获奖概率为%.4f" %
+np.random.seed(4)  # 设定随机种子,使实验具有可重复性
+K = 10 # 设置多臂老虎机的臂数
+bandit_10_arm = BernoulliBandit(K) #定义一个多臂老虎机，名字是bandit_10_arm,由刚才的函数定义
+print("随机生成了一个%d臂伯努利老虎机" % K) #在%d的位置会填入K的值
+print("获奖概率最大的拉杆为%d号,其获奖概率为%.4f" % #同样，在%d的地方填入后面括号里的内容
       (bandit_10_arm.best_idx, bandit_10_arm.best_prob))
