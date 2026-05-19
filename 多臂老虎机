@@ -1,0 +1,27 @@
+
+import numpy as np #numpy是科学计算库，支持数组和矩阵运算
+import matplotlib.pyplot as plt # matplotlib是绘图库
+
+
+class BernoulliBandit: # bernoulli bandit多臂老虎机
+    def __init__(self, K): # k是拉杆的数量
+        self.probs = np.random.uniform(size=K)  # 随机生成K个0～1的数,作为拉动每根拉杆的获奖
+        # 概率
+        self.best_idx = np.argmax(self.probs)  # 获奖概率最大的拉杆
+        self.best_prob = self.probs[self.best_idx]  # 最大的获奖概率
+        self.K = K
+
+    def step(self, k): #玩家选择k号拉杆后，函数返回1或者0的获奖情况
+        
+        if np.random.rand() < self.probs[k]: # 此为获奖的情况,如果获奖概率为0.7，随机数小于0.7的概率会正好为0.7
+            return 1
+        else:
+            return 0
+
+
+np.random.seed(1)  # 设定随机种子,使实验具有可重复性
+K = 10
+bandit_10_arm = BernoulliBandit(K)
+print("随机生成了一个%d臂伯努利老虎机" % K)
+print("获奖概率最大的拉杆为%d号,其获奖概率为%.4f" %
+      (bandit_10_arm.best_idx, bandit_10_arm.best_prob))
