@@ -2,6 +2,7 @@
 import numpy as np #numpy是科学计算库，支持数组和矩阵运算
 import matplotlib.pyplot as plt # matplotlib是绘图库
 
+'''定义一个多臂老虎机'''
 
 class BernoulliBandit: # bernoulli bandit多臂老虎机
     def __init__(self, K): # k是拉杆的数量
@@ -19,9 +20,59 @@ class BernoulliBandit: # bernoulli bandit多臂老虎机
             return 0
 
 
+'''随机生成一个确定的多臂老虎机'''#class定义了一个图纸，而具体的实例是按照图纸画的图
+
 np.random.seed(4)  # 设定随机种子,使实验具有可重复性
 K = 10 # 设置多臂老虎机的臂数
 bandit_10_arm = BernoulliBandit(K) #定义一个多臂老虎机，名字是bandit_10_arm,由刚才的函数定义
 print("随机生成了一个%d臂伯努利老虎机" % K) #在%d的位置会填入K的值
 print("获奖概率最大的拉杆为%d号,其获奖概率为%.4f" % #同样，在%d的地方填入后面括号里的内容
       (bandit_10_arm.best_idx, bandit_10_arm.best_prob))
+
+
+'''solver是所有算法的基础类，可以求解这个多臂老虎机问题'''
+
+class Solver: 
+    def __init__(self, bandit):  # 输入bandit,也就是之前创造的老虎机实例
+        self.bandit = bandit  # 吧bandit存到自身属性里，之后可以用这个方式来访问老虎机信息
+        self.counts = np.zeros(self.bandit.K)  # 每根拉杆的尝试次数
+        self.regret = 0.  # 当前步的累积懊悔，0.就是0.0的意思，是浮点数的类型
+        self.actions = []  # 维护一个列表,记录每一步的动作
+        self.regrets = []  # 维护一个列表,记录每一步的累积懊悔
+
+    def update_regret(self, k):
+        # 本次选了k输入。记录这次的regret并保存。
+        self.regret += self.bandit.best_prob - self.bandit.probs[k] #最优概率减去我选的概率
+        self.regrets.append(self.regret)
+
+    def run_one_step(self):
+        # 返回当前动作选择哪一根拉杆,由每个具体的策略实现
+        raise NotImplementedError
+
+    def run(self, num_steps):
+        # 这是多臂老虎机的核心算法循环
+        for _ in range(num_steps): #num_steps是总运行次数
+            k = self.run_one_step() #k是被选中的拉杆编号
+            self.counts[k] += 1 
+            self.actions.append(k)
+            self.update_regret(k)
+
+
+'''epsilon贪婪算法'''
+
+class EpsilonGreedy(Solver): #这是一个求解器
+    def __init__(self, bandit, epsilon=0.01, init_prob=1.0): 
+    #初始化方法，bandit是多臂老虎机的实例，epsilon是探索率（1%的概率随机探索），init_prob是期望每个奖励是1.0
+        super(EpsilonGreedy, self).__init__(bandit)
+        self.epsilon = epsilon
+        #初始化拉动所有拉杆的期望奖励估值
+        self.estimates = np.array([init_prob] * self.bandit.K)
+
+    def run_one_step(self): #这是核心的算法
+        if np.random.random() < self.epsilon: #epsilon的概率是探索，越大越探索
+            k = np.random.randint(0, self.bandit.K)  # 随机选择一根拉杆
+        else: #其他的1-epsilon的概率就是利用
+            k = np.argmax(self.estimates)  # 选择期望奖励估值最大的拉杆
+        r = self.bandit.step(k)  #得到这次实际获得的奖励
+        self.estimates[k] += 1. / (self.counts[k] + 1) * (r - self.estimates[k]) #更新估值
+        return k
